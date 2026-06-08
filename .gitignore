@@ -1,0 +1,6 @@
+.DS_Store
+.derivedData/
+.module-cache/
+.xcode-derived/
+.xcode-derived-check/
+.xcode-home/
