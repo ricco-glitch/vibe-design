@@ -2281,7 +2281,7 @@ private struct SelectVoiceView: View {
     private func toggleVoice(_ preset: VoicePreset) {
         if let index = selectedVoices.firstIndex(where: { $0.preset.id == preset.id }) {
             selectedVoices.remove(at: index)
-            normalizeWeights()
+            resetWeightsToFull()
             return
         }
 
@@ -2290,13 +2290,13 @@ private struct SelectVoiceView: View {
             return
         }
 
-        selectedVoices.append(VoiceMixSelection(preset: preset, weight: selectedVoices.isEmpty ? 1 : 0.5))
-        normalizeWeights()
+        selectedVoices.append(VoiceMixSelection(preset: preset, weight: 1))
+        resetWeightsToFull()
     }
 
     private func removeVoice(_ selection: VoiceMixSelection) {
         selectedVoices.removeAll { $0.id == selection.id }
-        normalizeWeights()
+        resetWeightsToFull()
     }
 
     private func normalizeWeights() {
@@ -2309,6 +2309,14 @@ private struct SelectVoiceView: View {
             for index in selectedVoices.indices {
                 selectedVoices[index].weight = selectedVoices[index].weight / total
             }
+        }
+    }
+
+    private func resetWeightsToFull() {
+        guard !selectedVoices.isEmpty else { return }
+
+        for index in selectedVoices.indices {
+            selectedVoices[index].weight = 1
         }
     }
 
