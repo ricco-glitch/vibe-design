@@ -19,7 +19,7 @@ sudo killall -9 simdiskimaged 2>/dev/null || true
 echo "Cleaning Xcode and Simulator caches..."
 rm -rf "$HOME/Library/Developer/CoreSimulator/Caches"
 rm -rf "$HOME/Library/Logs/CoreSimulator"
-rm -rf "$HOME/Library/Developer/Xcode/DerivedData/Project_D-"*
+rm -rf "$HOME/Library/Developer/Xcode/DerivedData/create-"*
 
 echo "Selecting Xcode and running first launch setup..."
 sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
@@ -31,16 +31,16 @@ xcrun simctl runtime scan-and-mount || true
 echo "Available simulator runtimes:"
 xcrun simctl list runtimes
 
-echo "Building Project D..."
+echo "Building create..."
 cd "/Users/fang/Documents/Design"
 xcodebuild \
-  -project "Project D.xcodeproj" \
-  -scheme "Project D" \
+  -project "create.xcodeproj" \
+  -scheme "create" \
   -destination "generic/platform=iOS Simulator" \
   -derivedDataPath "/Users/fang/Documents/Design/.xcode-derived" \
   build
 
 echo ""
-echo "Done. If the build succeeded, you can reopen Project D.xcodeproj in Xcode."
+echo "Done. If the build succeeded, you can reopen create.xcodeproj in Xcode."
 echo "Log saved to: $LOG"
 read -k 1 "?Press any key to close this window..."

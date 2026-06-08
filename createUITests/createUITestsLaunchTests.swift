@@ -1,13 +1,13 @@
 //
-//  Project_DUITestsLaunchTests.swift
-//  Project DUITests
+//  createUITestsLaunchTests.swift
+//  createUITests
 //
 //  Created by Fang on 2026/6/1.
 //
 
 import XCTest
 
-final class Project_DUITestsLaunchTests: XCTestCase {
+final class createUITestsLaunchTests: XCTestCase {
 
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         true

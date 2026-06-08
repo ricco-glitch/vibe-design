@@ -1,13 +1,13 @@
 //
-//  Project_DUITests.swift
-//  Project DUITests
+//  createUITests.swift
+//  createUITests
 //
 //  Created by Fang on 2026/6/1.
 //
 
 import XCTest
 
-final class Project_DUITests: XCTestCase {
+final class createUITests: XCTestCase {
 
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.

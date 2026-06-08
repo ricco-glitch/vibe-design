@@ -1,6 +1,6 @@
 //
 //  ContentView.swift
-//  Project D
+//  create
 //
 //  Created by Fang on 2026/6/1.
 //
@@ -3117,9 +3117,6 @@ private struct VoiceListSection: View {
                     .background(VoiceCategoryListHeightReader(category: category))
                     .opacity(selectedCategory == category ? 1 : 0)
                     .allowsHitTesting(selectedCategory == category)
-                    .transaction { transaction in
-                        transaction.animation = nil
-                    }
                 }
             }
             .frame(height: selectedListHeight, alignment: .top)
@@ -3197,11 +3194,6 @@ private struct VoicePresetListRows: View {
                     onPlay: { onPlay(preset) },
                     onToggle: { onToggle(preset) }
                 )
-                .transaction { transaction in
-                    if transaction.animation != nil {
-                        transaction.disablesAnimations = true
-                    }
-                }
                 .animation(nil, value: isSelected)
                 .animation(nil, value: isPlaying)
             }

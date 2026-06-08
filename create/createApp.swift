@@ -1,6 +1,6 @@
 //
-//  Project_DApp.swift
-//  Project D
+//  createApp.swift
+//  create
 //
 //  Created by Fang on 2026/6/1.
 //
@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct Project_DApp: App {
+struct createApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
