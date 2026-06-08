@@ -174,7 +174,6 @@ struct CreateRoleView: View {
     @State private var keyboardFrame = CGRect.zero
     @State private var keyboardHeight: CGFloat = 0
     @State private var fieldFrames: [CreateRoleFocusedField: CGRect] = [:]
-    @State private var navigationGlassProgress = 0.0
     @State private var isPageScrolling = false
     @State private var lastScrollOffsetY = 0.0
     @State private var scrollHideDistance = 0.0
@@ -187,202 +186,208 @@ struct CreateRoleView: View {
 
     var body: some View {
         ZStack(alignment: .top) {
-            CreateRoleBackground()
+            NavigationStack {
+                ZStack(alignment: .top) {
+                CreateRoleBackground()
 
-            ZStack(alignment: .top) {
-                ScrollViewReader { scrollProxy in
-                    ScrollView(showsIndicators: false) {
-                        Color.clear
-                            .frame(height: 0)
-                            .id(CreateRoleScrollAnchor.top)
+                ZStack(alignment: .top) {
+                    ScrollViewReader { scrollProxy in
+                        ScrollView(showsIndicators: false) {
+                            Color.clear
+                                .frame(height: 0)
+                                .id(CreateRoleScrollAnchor.top)
 
-                        Group {
-                            if isGeneratingImage {
-                                GeneratingImageContent(
-                                    characterName: characterName,
-                                    settings: settings,
-                                    opening: opening,
-                                    intro: intro,
-                                    selectedVoice: selectedVoiceSummary,
-                                    startedAt: generationStartedAt
-                                )
-                                .id(generationStartedAt)
-                            } else {
-                                CreateRoleFormContent(
-                                    characterName: $characterName,
-                                    settings: $settings,
-                                    opening: $opening,
-                                    intro: $intro,
-                                    selectedVoice: selectedVoiceSummary,
-                                    hasAppearanceImage: hasAppearanceImage,
-                                    nameValidationTip: nameValidationTip,
-                                    settingsValidationTip: settingsValidationTip,
-                                    focusedField: $focusedField,
-                                    onAppearanceTap: presentAppearanceSheet,
-                                    onVoiceTap: presentVoiceSelector
-                                )
+                            Group {
+                                if isGeneratingImage {
+                                    GeneratingImageContent(
+                                        characterName: characterName,
+                                        settings: settings,
+                                        opening: opening,
+                                        intro: intro,
+                                        selectedVoice: selectedVoiceSummary,
+                                        startedAt: generationStartedAt
+                                    )
+                                    .id(generationStartedAt)
+                                } else {
+                                    CreateRoleFormContent(
+                                        characterName: $characterName,
+                                        settings: $settings,
+                                        opening: $opening,
+                                        intro: $intro,
+                                        selectedVoice: selectedVoiceSummary,
+                                        hasAppearanceImage: hasAppearanceImage,
+                                        nameValidationTip: nameValidationTip,
+                                        settingsValidationTip: settingsValidationTip,
+                                        focusedField: $focusedField,
+                                        onAppearanceTap: presentAppearanceSheet,
+                                        onVoiceTap: presentVoiceSelector
+                                    )
+                                }
                             }
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.top, 64)
-                        .padding(.bottom, keyboardIsVisible ? 16 : 122)
-                    }
-                    .onScrollGeometryChange(for: Double.self) { geometry in
-                        Double(geometry.contentOffset.y)
-                    } action: { _, offsetY in
-                        navigationGlassProgress = min(max(offsetY / 56, 0), 1)
-                        updateFloatingButtonVisibility(offsetY: offsetY)
-                    }
-                    .onPreferenceChange(CreateRoleFieldFramePreferenceKey.self) { frames in
-                        fieldFrames = frames
-
-                        if keyboardIsVisible, focusedField != nil, focusedField != .name {
-                            adjustFocusedFieldForKeyboard(using: frames, delay: 0.01)
-                        }
-                    }
-                    .safeAreaInset(edge: .bottom, spacing: 0) {
-                        if keyboardIsVisible {
-                            Color.clear.frame(height: keyboardHeight)
-                        }
-                    }
-                    .scrollDismissesKeyboard(.interactively)
-                    .onChange(of: focusedField) { _, newValue in
-                        guard newValue != nil, keyboardIsVisible else { return }
-                        scheduleFocusedFieldKeyboardAdjustments(for: newValue)
-                    }
-                    .onChange(of: keyboardIsVisible) { _, isVisible in
-                        if isVisible {
-                            scheduleFocusedFieldKeyboardAdjustments(for: focusedField)
-                        }
-                    }
-                    .onChange(of: resetScrollToken) { _, _ in
-                        withAnimation(.easeInOut(duration: 0.22)) {
-                            scrollProxy.scrollTo(CreateRoleScrollAnchor.top, anchor: .top)
-                        }
-                    }
-                }
-
-                LiquidGlassNavigationBackground(progress: navigationGlassProgress)
-                    .frame(height: 132)
-                    .ignoresSafeArea(edges: .top)
-                    .allowsHitTesting(false)
-                    .zIndex(1)
-
-                TopNavigationBar(onBack: handleBackTap)
-                    .zIndex(2)
-
-                if !keyboardIsVisible {
-                    VStack {
-                        Spacer()
-
-                        PrimaryCreateButton {
-                            if !isGeneratingImage {
-                                handleCreateTap()
-                            }
-                        }
                             .padding(.horizontal, 16)
-                            .padding(.bottom, 42)
+                            .padding(.top, 20)
+                            .padding(.bottom, keyboardIsVisible ? 16 : 122)
+                        }
+                        .onScrollGeometryChange(for: Double.self) { geometry in
+                            Double(geometry.contentOffset.y)
+                        } action: { _, offsetY in
+                            updateFloatingButtonVisibility(offsetY: offsetY)
+                        }
+                        .onPreferenceChange(CreateRoleFieldFramePreferenceKey.self) { frames in
+                            fieldFrames = frames
+
+                            if keyboardIsVisible, focusedField != nil, focusedField != .name {
+                                adjustFocusedFieldForKeyboard(using: frames, delay: 0.01)
+                            }
+                        }
+                        .safeAreaInset(edge: .bottom, spacing: 0) {
+                            if keyboardIsVisible {
+                                Color.clear.frame(height: keyboardHeight)
+                            }
+                        }
+                        .scrollDismissesKeyboard(.interactively)
+                        .onChange(of: focusedField) { _, newValue in
+                            guard newValue != nil, keyboardIsVisible else { return }
+                            scheduleFocusedFieldKeyboardAdjustments(for: newValue)
+                        }
+                        .onChange(of: keyboardIsVisible) { _, isVisible in
+                            if isVisible {
+                                scheduleFocusedFieldKeyboardAdjustments(for: focusedField)
+                            }
+                        }
+                        .onChange(of: resetScrollToken) { _, _ in
+                            withAnimation(.easeInOut(duration: 0.22)) {
+                                scrollProxy.scrollTo(CreateRoleScrollAnchor.top, anchor: .top)
+                            }
+                        }
                     }
-                    .opacity(isPageScrolling ? 0.001 : 1)
-                    .offset(y: isPageScrolling ? 72 : 0)
-                    .allowsHitTesting(!isPageScrolling)
-                    .scaleEffect(isPageScrolling ? 0.985 : 1, anchor: .bottom)
-                    .animation(isPageScrolling ? buttonHideAnimation : buttonRevealAnimation, value: isPageScrolling)
-                    .ignoresSafeArea(edges: .bottom)
-                    .zIndex(3)
-                }
 
-                if showImageToast {
-                    ToastView(message: toastMessage)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                        .transition(
-                            .asymmetric(
-                                insertion: .opacity.combined(with: .scale(scale: 0.92)),
-                                removal: .opacity.combined(with: .scale(scale: 0.98))
+                    if !keyboardIsVisible {
+                        VStack {
+                            Spacer()
+
+                            PrimaryCreateButton {
+                                if !isGeneratingImage {
+                                    handleCreateTap()
+                                }
+                            }
+                                .padding(.horizontal, 16)
+                                .padding(.bottom, 42)
+                        }
+                        .opacity(isPageScrolling ? 0.001 : 1)
+                        .offset(y: isPageScrolling ? 72 : 0)
+                        .allowsHitTesting(!isPageScrolling)
+                        .scaleEffect(isPageScrolling ? 0.985 : 1, anchor: .bottom)
+                        .animation(isPageScrolling ? buttonHideAnimation : buttonRevealAnimation, value: isPageScrolling)
+                        .ignoresSafeArea(edges: .bottom)
+                        .zIndex(3)
+                    }
+
+                    if showImageToast {
+                        ToastView(message: toastMessage)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                            .transition(
+                                .asymmetric(
+                                    insertion: .opacity.combined(with: .scale(scale: 0.92)),
+                                    removal: .opacity.combined(with: .scale(scale: 0.98))
+                                )
                             )
-                        )
-                        .zIndex(4)
+                            .zIndex(4)
+                    }
+
+                    KeyboardDismissLayer {
+                        focusedField = nil
+                        keyboardIsVisible = false
+                        UIApplication.shared.endEditing()
+                    }
+                    .allowsHitTesting(keyboardIsVisible)
+                    .ignoresSafeArea()
                 }
-
-                KeyboardDismissLayer {
-                    focusedField = nil
-                    keyboardIsVisible = false
-                    UIApplication.shared.endEditing()
-                }
-                .allowsHitTesting(keyboardIsVisible)
-                .ignoresSafeArea()
-            }
-            .blur(radius: showAppearanceBackdrop ? 10 : 0)
-            .overlay {
-                if showAppearanceBackdrop {
-                    FloatingBackdropGlow(focus: appearanceGlowFocus)
-                        .ignoresSafeArea()
-                        .transition(.opacity)
-
-                    Color.black
-                        .opacity(0.14)
-                        .ignoresSafeArea()
-                        .transition(.opacity)
-                }
-            }
-            .animation(appearanceBackdropAnimation, value: showAppearanceBackdrop)
-
-            if showAppearanceSheet {
-                GeometryReader { proxy in
-                    let sheetTopInset = proxy.safeAreaInsets.top > 0 ? proxy.safeAreaInsets.top : 54
-
-                    ZStack(alignment: .top) {
-                        Color.clear
-                            .contentShape(Rectangle())
+                .blur(radius: showAppearanceBackdrop ? 10 : 0)
+                .overlay {
+                    if showAppearanceBackdrop {
+                        FloatingBackdropGlow(focus: appearanceGlowFocus)
                             .ignoresSafeArea()
-                            .onTapGesture {
+                            .transition(.opacity)
+
+                        Color.black
+                            .opacity(0.14)
+                            .ignoresSafeArea()
+                            .transition(.opacity)
+                    }
+                }
+                .animation(appearanceBackdropAnimation, value: showAppearanceBackdrop)
+
+                if showAppearanceSheet {
+                    GeometryReader { proxy in
+                        let sheetTopInset = proxy.safeAreaInsets.top > 0 ? proxy.safeAreaInsets.top : 54
+
+                        ZStack(alignment: .top) {
+                            Color.clear
+                                .contentShape(Rectangle())
+                                .ignoresSafeArea()
+                                .onTapGesture {
+                                    dismissAppearanceSheet()
+                                }
+
+                            AppearanceSheetView(
+                                prompt: $appearancePrompt,
+                                selectedStyle: $selectedAppearanceStyle,
+                                selectedReferenceItem: $selectedReferenceItem,
+                                referenceImage: $referenceImage
+                            ) {
+                                showToast("Please fill in the content first")
+                            } onGenerate: {
+                                hasAppearanceImage = true
+                                generationStartedAt = Date()
+                                isGeneratingImage = true
+                                showImageToast = false
                                 dismissAppearanceSheet()
                             }
+                            .frame(height: max(0, proxy.size.height - sheetTopInset))
+                            .offset(
+                                y: sheetTopInset
+                                    + appearanceSheetDragOffset
+                                    + (reduceMotion || appearanceSheetIsPresented ? 0 : proxy.size.height)
+                            )
+                            .opacity(reduceMotion ? (appearanceSheetIsPresented ? 1 : 0) : 1)
+                            .gesture(
+                                DragGesture()
+                                    .onChanged { value in
+                                        appearanceSheetDragOffset = max(0, value.translation.height)
+                                    }
+                                    .onEnded { value in
+                                        let shouldDismiss = value.translation.height > 88 || value.predictedEndTranslation.height > 160
 
-                        AppearanceSheetView(
-                            prompt: $appearancePrompt,
-                            selectedStyle: $selectedAppearanceStyle,
-                            selectedReferenceItem: $selectedReferenceItem,
-                            referenceImage: $referenceImage
-                        ) {
-                            showToast("Please fill in the content first")
-                        } onGenerate: {
-                            hasAppearanceImage = true
-                            generationStartedAt = Date()
-                            isGeneratingImage = true
-                            showImageToast = false
-                            dismissAppearanceSheet()
-                        }
-                        .frame(height: max(0, proxy.size.height - sheetTopInset))
-                        .offset(
-                            y: sheetTopInset
-                                + appearanceSheetDragOffset
-                                + (reduceMotion || appearanceSheetIsPresented ? 0 : proxy.size.height)
-                        )
-                        .opacity(reduceMotion ? (appearanceSheetIsPresented ? 1 : 0) : 1)
-                        .gesture(
-                            DragGesture()
-                                .onChanged { value in
-                                    appearanceSheetDragOffset = max(0, value.translation.height)
-                                }
-                                .onEnded { value in
-                                    let shouldDismiss = value.translation.height > 88 || value.predictedEndTranslation.height > 160
-
-                                    if shouldDismiss {
-                                        dismissAppearanceSheet()
-                                    } else {
-                                        withAnimation(appearanceSheetRestoreAnimation) {
-                                            appearanceSheetDragOffset = 0
+                                        if shouldDismiss {
+                                            dismissAppearanceSheet()
+                                        } else {
+                                            withAnimation(appearanceSheetRestoreAnimation) {
+                                                appearanceSheetDragOffset = 0
+                                            }
                                         }
                                     }
-                                }
-                        )
-                        .ignoresSafeArea(edges: .bottom)
+                            )
+                            .ignoresSafeArea(edges: .bottom)
+                        }
                     }
+                    .ignoresSafeArea()
+                    .zIndex(10)
                 }
-                .ignoresSafeArea()
-                .zIndex(10)
+
             }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button(action: handleBackTap) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 18, weight: .semibold))
+                    }
+                    .accessibilityLabel("Close")
+                }
+            }
+        }
 
             if showVoiceSelector {
                 SelectVoiceView(
@@ -603,7 +608,6 @@ struct CreateRoleView: View {
         keyboardFrame = .zero
         keyboardHeight = 0
         fieldFrames = [:]
-        navigationGlassProgress = 0
         isPageScrolling = false
         lastScrollOffsetY = 0
         scrollHideDistance = 0
@@ -1401,54 +1405,6 @@ private struct FigmaBackgroundGlow: View {
                 .compositingGroup()
                 .blur(radius: 45 * scale)
         }
-    }
-}
-
-private struct TopNavigationBar: View {
-    let onBack: () -> Void
-
-    var body: some View {
-        HStack {
-            Button(action: onBack) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 24, weight: .medium))
-                    .foregroundStyle(.white)
-                    .frame(width: 44, height: 44)
-            }
-            .contentShape(Rectangle())
-            .buttonStyle(.plain)
-
-            Spacer()
-        }
-        .padding(.leading, 16)
-        .padding(.trailing, 16)
-        .frame(height: 64)
-        .padding(.top, 0)
-    }
-}
-
-private struct LiquidGlassNavigationBackground: View {
-    let progress: Double
-
-    var body: some View {
-        Rectangle()
-            .fill(Color.clear)
-            .glassEffect(.regular.tint(Color(hex: 0x121212).opacity(0.42)), in: Rectangle())
-            .opacity(progress)
-            .mask(
-                LinearGradient(
-                    stops: [
-                        .init(color: .black.opacity(0.96), location: 0.00),
-                        .init(color: .black.opacity(0.96), location: 0.32),
-                        .init(color: .black.opacity(0.72), location: 0.46),
-                        .init(color: .black.opacity(0.28), location: 0.64),
-                        .init(color: .black.opacity(0.00), location: 0.88),
-                        .init(color: .black.opacity(0.00), location: 1.00)
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            )
     }
 }
 
@@ -2262,7 +2218,6 @@ private struct SelectVoiceView: View {
                 }
             }
             .ignoresSafeArea(edges: .bottom)
-            .navigationTitle("Select Voice")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbar {
@@ -2272,6 +2227,13 @@ private struct SelectVoiceView: View {
                             .font(.system(size: 18, weight: .semibold))
                     }
                     .accessibilityLabel("Back")
+                }
+
+                ToolbarItem(placement: .principal) {
+                    Text("Select Voice")
+                        .font(.telkaMedium(size: 17))
+                        .foregroundStyle(.white)
+                        .frame(height: 20)
                 }
             }
         }
@@ -2352,8 +2314,8 @@ private struct SelectVoiceView: View {
 private enum VoiceMixMotion {
     static let response = Animation.timingCurve(0.24, 0.0, 0.20, 1.0, duration: 0.34)
     static let quickExit = Animation.easeOut(duration: 0.10)
-    static let contentFadeIn = Animation.easeOut(duration: 0.18).delay(0.22)
-    static let contentFadeOut = Animation.easeOut(duration: 0.08)
+    static let contentFadeIn = Animation.easeInOut(duration: 0.16).delay(0.08)
+    static let contentFadeOut = Animation.easeOut(duration: 0.06)
     static let emptyHeight: CGFloat = 56
 }
 
@@ -2430,8 +2392,8 @@ private struct VoiceMixSection: View {
             }
             .frame(height: contentHeight, alignment: .top)
             .padding(.horizontal, 16)
-            .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             .padding(.horizontal, 16)
             .animation(VoiceMixMotion.response, value: hasSelectedVoices)
             .animation(VoiceMixMotion.response, value: selectedVoices.count)
@@ -2505,17 +2467,20 @@ private struct VoiceMixControls: View {
         VStack(spacing: 0) {
             selectionRows
 
-            VStack(spacing: 12) {
+            VStack(spacing: 16) {
                 VoiceAdjustmentSlider(title: "Pitch", lowLabel: "Low", highLabel: "High", value: $pitch)
 
                 VoiceAdjustmentSlider(title: "Speed", lowLabel: "Slow", highLabel: "Fast", value: $speed)
             }
-            .padding(.top, 16)
-            .padding(.bottom, 16)
+            .padding(.top, 20)
+            .padding(.bottom, 20)
 
-            Rectangle()
-                .fill(Color.white.opacity(0.08))
-                .frame(height: 0.5)
+            ZStack {
+                Rectangle()
+                    .fill(Color.white.opacity(0.08))
+                    .frame(height: 0.5)
+            }
+            .frame(height: 12)
 
             PreviewVoiceButton(
                 isLoading: isPreviewLoading,
@@ -2527,7 +2492,7 @@ private struct VoiceMixControls: View {
 
     @ViewBuilder
     private var selectionRows: some View {
-        VStack(spacing: selectedVoices.count > 1 ? 12 : 0) {
+        VStack(spacing: selectedVoices.count > 1 ? 10 : 0) {
             ForEach($selectedVoices) { $selection in
                 VoiceWeightRow(
                     selection: $selection,
@@ -2535,10 +2500,10 @@ private struct VoiceMixControls: View {
                     onPlay: onPlayVoice,
                     onRemove: onRemove
                 )
-                .transition(.opacity.combined(with: .move(edge: .bottom)))
+                .transition(.opacity)
             }
         }
-        .padding(.top, 8)
+        .padding(.top, 20)
         .animation(VoiceMixMotion.response, value: selectedVoices.count)
     }
 }
@@ -2605,9 +2570,9 @@ private struct VoiceWeightRow: View {
     let onRemove: (VoiceMixSelection) -> Void
 
     var body: some View {
-        VStack(spacing: showsWeightControls ? 8 : 0) {
+        VStack(spacing: showsWeightControls ? 4 : 0) {
             SingleVoiceMixHeader(selection: selection, onPlay: onPlay, onRemove: onRemove)
-                .frame(height: 40)
+                .frame(height: 24)
                 .transaction { transaction in
                     transaction.animation = nil
                 }
@@ -2615,13 +2580,13 @@ private struct VoiceWeightRow: View {
             if showsWeightControls {
                 HStack(spacing: 8) {
                     VoiceWeightSlider(value: $selection.weight)
-                        .frame(height: 44)
+                        .frame(height: 46)
                 }
                 .padding(.leading, 8)
                 .transition(.opacity.animation(VoiceMixMotion.contentFadeIn))
             }
         }
-        .frame(height: showsWeightControls ? 92 : 40, alignment: .top)
+        .frame(height: showsWeightControls ? 74 : 24, alignment: .top)
         .clipped()
         .animation(VoiceMixMotion.response, value: showsWeightControls)
     }
@@ -2639,11 +2604,11 @@ private struct VoiceAdjustmentSlider: View {
                 .font(.system(size: 15, weight: .regular))
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .frame(height: 22)
+                .frame(height: 18)
                 .padding(.leading, 4)
 
             VoiceTickSlider(value: $value)
-                .frame(height: 44)
+                .frame(height: 46)
 
             HStack {
                 Text(lowLabel)
@@ -2652,7 +2617,7 @@ private struct VoiceAdjustmentSlider: View {
             }
             .font(.system(size: 14, weight: .regular))
             .foregroundStyle(.white.opacity(0.40))
-            .frame(height: 18)
+            .frame(height: 17)
             .padding(.horizontal, 4)
         }
     }
@@ -2680,20 +2645,39 @@ private struct VoiceWeightSlider: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            Slider(value: $value, in: 0.1...1)
-                .tint(VoiceSliderStyle.highlightColor)
+            GeometryReader { proxy in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 3, style: .continuous)
+                        .fill(Color(red: 120.0 / 255.0, green: 120.0 / 255.0, blue: 120.0 / 255.0).opacity(0.20))
+                        .frame(height: VoiceSliderStyle.weightTrackHeight)
+
+                    RoundedRectangle(cornerRadius: 3, style: .continuous)
+                        .fill(VoiceSliderStyle.highlightColor)
+                        .frame(
+                            width: proxy.size.width * CGFloat((min(max(value, 0.1), 1) - 0.1) / 0.9),
+                            height: VoiceSliderStyle.weightTrackHeight
+                        )
+
+                    SystemThumbSlider(value: $value, range: 0.1...1)
+                }
+                .frame(height: proxy.size.height)
+            }
+            .frame(height: 46)
 
             Text("\(Int(min(max(value, 0.1), 1) * 100))%")
                 .font(.system(size: 14, weight: .regular))
-                .foregroundStyle(.white.opacity(0.58))
+                .foregroundStyle(.white.opacity(0.40))
                 .monospacedDigit()
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
                 .frame(width: valueWidth, alignment: .trailing)
         }
     }
 }
 
 private enum VoiceSliderStyle {
-    static let highlightColor = Color(hex: 0x0A9BFF)
+    static let highlightColor = Color(hex: 0x0088FF)
+    static let weightTrackHeight: CGFloat = 5
     static let designedTrackHeight: CGFloat = 24
     static let designedTrackCornerRadius: CGFloat = 12
 }
@@ -2789,7 +2773,7 @@ private struct PreviewVoiceButton: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 56)
+            .frame(height: 58)
         }
         .buttonStyle(.plain)
     }
@@ -2904,8 +2888,8 @@ private struct SelectVoiceListRow: View {
         }
         .padding(.leading, 12)
         .padding(.trailing, 16)
-        .frame(height: 72)
-        .background(Color.white.opacity(isSelected ? 0.08 : 0.04), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .frame(height: 80)
+        .background(Color.white.opacity(isSelected ? 0.08 : 0.04), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
 }
 
