@@ -9,8 +9,6 @@ struct ContentView: View {
     @State private var selectedTab: MainTab = .home
     @State private var isCreatePresented = false
 
-    private let createPresentationAnimation = Animation.timingCurve(0.18, 0.92, 0.20, 1.0, duration: 0.46)
-
     var body: some View {
         ZStack {
             switch selectedTab {
@@ -31,34 +29,21 @@ struct ContentView: View {
                 }
                     .ignoresSafeArea()
             }
-
-            if isCreatePresented {
-                CreateRoleView {
-                    dismissCreate()
-                }
-                .transition(
-                    .asymmetric(
-                        insertion: .move(edge: .bottom),
-                        removal: .move(edge: .bottom)
-                    )
-                )
-                .zIndex(10)
-            }
         }
         .background(Color.black)
-        .animation(createPresentationAnimation, value: isCreatePresented)
+        .fullScreenCover(isPresented: $isCreatePresented) {
+            CreateRoleView {
+                dismissCreate()
+            }
+        }
     }
 
     private func presentCreate() {
-        withAnimation(createPresentationAnimation) {
-            isCreatePresented = true
-        }
+        isCreatePresented = true
     }
 
     private func dismissCreate() {
-        withAnimation(createPresentationAnimation) {
-            isCreatePresented = false
-        }
+        isCreatePresented = false
     }
 }
 

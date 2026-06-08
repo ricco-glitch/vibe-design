@@ -84,24 +84,45 @@ private struct VoiceMixSelection: Identifiable, Hashable {
     var id: String { preset.id }
 }
 
+private enum VoicePlaybackOrigin {
+    case mix
+    case list
+}
+
 private enum VoiceLibrary {
     static let maxMixedVoices = 3
 
     static let presets: [VoicePreset] = [
-        VoicePreset(id: "funny-guy", name: "Funny Guy", primaryTrait: "Mid-age", secondaryTrait: "Elegant", category: .male),
+        VoicePreset(id: "funny-guy", name: "Funny Guy", primaryTrait: "Comic", secondaryTrait: "Dapper", category: .male),
         VoicePreset(id: "clever-character", name: "Clever Character", primaryTrait: "Refined", secondaryTrait: "Graceful", category: .female),
         VoicePreset(id: "sharp-witted-persona", name: "Sharp-Witted Persona", primaryTrait: "Chic", secondaryTrait: "Cultivated", category: .female),
-        VoicePreset(id: "quick-witted-identity", name: "Quick-Witted Identity", primaryTrait: "Elegant", secondaryTrait: "Worldly", category: .male),
-        VoicePreset(id: "smart-witty-persona", name: "Smart and Witty Persona", primaryTrait: "Elegant", secondaryTrait: "Worldly", category: .female),
-        VoicePreset(id: "witty-charming-persona", name: "Witty and Charming Persona", primaryTrait: "Elegant", secondaryTrait: "Worldly", category: .male),
-        VoicePreset(id: "bright-persona", name: "Bright Persona", primaryTrait: "Cultured", secondaryTrait: "Worldly", category: .female),
-        VoicePreset(id: "warm-narrator", name: "Warm Narrator", primaryTrait: "Soft", secondaryTrait: "Measured", category: .male)
+        VoicePreset(id: "quick-witted-identity", name: "Quick-Witted Identity", primaryTrait: "Suave", secondaryTrait: "Cosmopolitan", category: .male),
+        VoicePreset(id: "smart-witty-persona", name: "Smart and Witty Persona", primaryTrait: "Astute", secondaryTrait: "Sophisticated", category: .female),
+        VoicePreset(id: "witty-charming-persona", name: "Witty and Charming Persona", primaryTrait: "Charming", secondaryTrait: "Magnetic", category: .male),
+        VoicePreset(id: "bright-persona", name: "Bright Persona", primaryTrait: "Radiant", secondaryTrait: "Cultured", category: .female),
+        VoicePreset(id: "warm-narrator", name: "Warm Narrator", primaryTrait: "Soft", secondaryTrait: "Measured", category: .male),
+        VoicePreset(id: "playful-confidant", name: "Playful Confidant", primaryTrait: "Lighthearted", secondaryTrait: "Sincere", category: .female),
+        VoicePreset(id: "calm-storyteller", name: "Calm Storyteller", primaryTrait: "Gentle", secondaryTrait: "Steady", category: .male),
+        VoicePreset(id: "silver-tongued-guide", name: "Silver-Tongued Guide", primaryTrait: "Polished", secondaryTrait: "Composed", category: .female),
+        VoicePreset(id: "clever-companion", name: "Clever Companion", primaryTrait: "Agile", secondaryTrait: "Warm", category: .male),
+        VoicePreset(id: "velvet-analyst", name: "Velvet Analyst", primaryTrait: "Smooth", secondaryTrait: "Precise", category: .female),
+        VoicePreset(id: "bright-hearted-lead", name: "Bright-Hearted Lead", primaryTrait: "Upbeat", secondaryTrait: "Clear", category: .male),
+        VoicePreset(id: "mellow-strategist", name: "Mellow Strategist", primaryTrait: "Relaxed", secondaryTrait: "Insightful", category: .female),
+        VoicePreset(id: "soft-spoken-sage", name: "Soft-Spoken Sage", primaryTrait: "Patient", secondaryTrait: "Thoughtful", category: .male),
+        VoicePreset(id: "quick-charm-voice", name: "Quick Charm Voice", primaryTrait: "Lively", secondaryTrait: "Bright", category: .female),
+        VoicePreset(id: "urban-dreamer", name: "Urban Dreamer", primaryTrait: "Modern", secondaryTrait: "Tender", category: .male),
+        VoicePreset(id: "crisp-minded-muse", name: "Crisp-Minded Muse", primaryTrait: "Sharp", secondaryTrait: "Playful", category: .female),
+        VoicePreset(id: "steady-hearted-mentor", name: "Steady-Hearted Mentor", primaryTrait: "Grounded", secondaryTrait: "Kind", category: .male),
+        VoicePreset(id: "moonlit-advisor", name: "Moonlit Advisor", primaryTrait: "Quiet", secondaryTrait: "Poised", category: .female),
+        VoicePreset(id: "sunny-dialogue-partner", name: "Sunny Dialogue Partner", primaryTrait: "Open", secondaryTrait: "Cheerful", category: .male),
+        VoicePreset(id: "nimble-scene-reader", name: "Nimble Scene Reader", primaryTrait: "Expressive", secondaryTrait: "Fluid", category: .female),
+        VoicePreset(id: "polite-raconteur", name: "Polite Raconteur", primaryTrait: "Courteous", secondaryTrait: "Articulate", category: .male)
     ]
 
     static let initialSelections: [VoiceMixSelection] = []
 
     static func summary(for selections: [VoiceMixSelection]) -> String {
-        guard !selections.isEmpty else { return "Unselected" }
+        guard !selections.isEmpty else { return "Select" }
         guard selections.count > 1 else { return selections[0].preset.name }
         return selections.map(\.preset.name).joined(separator: " + ")
     }
@@ -188,206 +209,153 @@ struct CreateRoleView: View {
         ZStack(alignment: .top) {
             NavigationStack {
                 ZStack(alignment: .top) {
-                CreateRoleBackground()
+                    CreateRoleBackground()
 
-                ZStack(alignment: .top) {
-                    ScrollViewReader { scrollProxy in
-                        ScrollView(showsIndicators: false) {
-                            Color.clear
-                                .frame(height: 0)
-                                .id(CreateRoleScrollAnchor.top)
+                    ZStack(alignment: .bottom) {
+                        ScrollViewReader { scrollProxy in
+                            ScrollView(showsIndicators: false) {
+                                Color.clear
+                                    .frame(height: 0)
+                                    .id(CreateRoleScrollAnchor.top)
 
-                            Group {
-                                if isGeneratingImage {
-                                    GeneratingImageContent(
-                                        characterName: characterName,
-                                        settings: settings,
-                                        opening: opening,
-                                        intro: intro,
-                                        selectedVoice: selectedVoiceSummary,
-                                        startedAt: generationStartedAt
-                                    )
-                                    .id(generationStartedAt)
-                                } else {
-                                    CreateRoleFormContent(
-                                        characterName: $characterName,
-                                        settings: $settings,
-                                        opening: $opening,
-                                        intro: $intro,
-                                        selectedVoice: selectedVoiceSummary,
-                                        hasAppearanceImage: hasAppearanceImage,
-                                        nameValidationTip: nameValidationTip,
-                                        settingsValidationTip: settingsValidationTip,
-                                        focusedField: $focusedField,
-                                        onAppearanceTap: presentAppearanceSheet,
-                                        onVoiceTap: presentVoiceSelector
-                                    )
+                                Group {
+                                    if isGeneratingImage {
+                                        GeneratingImageContent(
+                                            characterName: characterName,
+                                            settings: settings,
+                                            opening: opening,
+                                            intro: intro,
+                                            selectedVoice: selectedVoiceSummary,
+                                            startedAt: generationStartedAt
+                                        )
+                                        .id(generationStartedAt)
+                                    } else {
+                                        CreateRoleFormContent(
+                                            characterName: $characterName,
+                                            settings: $settings,
+                                            opening: $opening,
+                                            intro: $intro,
+                                            selectedVoice: selectedVoiceSummary,
+                                            hasAppearanceImage: hasAppearanceImage,
+                                            nameValidationTip: nameValidationTip,
+                                            settingsValidationTip: settingsValidationTip,
+                                            focusedField: $focusedField,
+                                            onAppearanceTap: presentAppearanceSheet,
+                                            onVoiceTap: presentVoiceSelector
+                                        )
+                                    }
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.top, 20)
+                                .padding(.bottom, keyboardIsVisible ? 16 : 122)
+                            }
+                            .onScrollGeometryChange(for: Double.self) { geometry in
+                                Double(geometry.contentOffset.y)
+                            } action: { _, offsetY in
+                                updateFloatingButtonVisibility(offsetY: offsetY)
+                            }
+                            .onPreferenceChange(CreateRoleFieldFramePreferenceKey.self) { frames in
+                                fieldFrames = frames
+
+                                if keyboardIsVisible, focusedField != nil, focusedField != .name {
+                                    adjustFocusedFieldForKeyboard(using: frames, delay: 0.01)
                                 }
                             }
-                            .padding(.horizontal, 16)
-                            .padding(.top, 20)
-                            .padding(.bottom, keyboardIsVisible ? 16 : 122)
-                        }
-                        .onScrollGeometryChange(for: Double.self) { geometry in
-                            Double(geometry.contentOffset.y)
-                        } action: { _, offsetY in
-                            updateFloatingButtonVisibility(offsetY: offsetY)
-                        }
-                        .onPreferenceChange(CreateRoleFieldFramePreferenceKey.self) { frames in
-                            fieldFrames = frames
-
-                            if keyboardIsVisible, focusedField != nil, focusedField != .name {
-                                adjustFocusedFieldForKeyboard(using: frames, delay: 0.01)
-                            }
-                        }
-                        .safeAreaInset(edge: .bottom, spacing: 0) {
-                            if keyboardIsVisible {
-                                Color.clear.frame(height: keyboardHeight)
-                            }
-                        }
-                        .scrollDismissesKeyboard(.interactively)
-                        .onChange(of: focusedField) { _, newValue in
-                            guard newValue != nil, keyboardIsVisible else { return }
-                            scheduleFocusedFieldKeyboardAdjustments(for: newValue)
-                        }
-                        .onChange(of: keyboardIsVisible) { _, isVisible in
-                            if isVisible {
-                                scheduleFocusedFieldKeyboardAdjustments(for: focusedField)
-                            }
-                        }
-                        .onChange(of: resetScrollToken) { _, _ in
-                            withAnimation(.easeInOut(duration: 0.22)) {
-                                scrollProxy.scrollTo(CreateRoleScrollAnchor.top, anchor: .top)
-                            }
-                        }
-                    }
-
-                    if !keyboardIsVisible {
-                        VStack {
-                            Spacer()
-
-                            PrimaryCreateButton {
-                                if !isGeneratingImage {
-                                    handleCreateTap()
+                            .safeAreaInset(edge: .bottom, spacing: 0) {
+                                if keyboardIsVisible {
+                                    Color.clear.frame(height: keyboardHeight)
                                 }
                             }
+                            .scrollDismissesKeyboard(.interactively)
+                            .onChange(of: focusedField) { _, newValue in
+                                guard newValue != nil, keyboardIsVisible else { return }
+                                scheduleFocusedFieldKeyboardAdjustments(for: newValue)
+                            }
+                            .onChange(of: keyboardIsVisible) { _, isVisible in
+                                if isVisible {
+                                    scheduleFocusedFieldKeyboardAdjustments(for: focusedField)
+                                }
+                            }
+                            .onChange(of: resetScrollToken) { _, _ in
+                                withAnimation(.easeInOut(duration: 0.22)) {
+                                    scrollProxy.scrollTo(CreateRoleScrollAnchor.top, anchor: .top)
+                                }
+                            }
+                        }
+
+                        if !keyboardIsVisible {
+                            LinearGradient(
+                                colors: [Color(hex: 0x121212).opacity(0), Color(hex: 0x121212)],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                            .frame(height: 114)
+                            .overlay(alignment: .bottom) {
+                                PrimaryCreateButton {
+                                    if !isGeneratingImage {
+                                        handleCreateTap()
+                                    }
+                                }
                                 .padding(.horizontal, 16)
                                 .padding(.bottom, 42)
-                        }
-                        .opacity(isPageScrolling ? 0.001 : 1)
-                        .offset(y: isPageScrolling ? 72 : 0)
-                        .allowsHitTesting(!isPageScrolling)
-                        .scaleEffect(isPageScrolling ? 0.985 : 1, anchor: .bottom)
-                        .animation(isPageScrolling ? buttonHideAnimation : buttonRevealAnimation, value: isPageScrolling)
-                        .ignoresSafeArea(edges: .bottom)
-                        .zIndex(3)
-                    }
-
-                    if showImageToast {
-                        ToastView(message: toastMessage)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                            .transition(
-                                .asymmetric(
-                                    insertion: .opacity.combined(with: .scale(scale: 0.92)),
-                                    removal: .opacity.combined(with: .scale(scale: 0.98))
-                                )
-                            )
-                            .zIndex(4)
-                    }
-
-                    KeyboardDismissLayer {
-                        focusedField = nil
-                        keyboardIsVisible = false
-                        UIApplication.shared.endEditing()
-                    }
-                    .allowsHitTesting(keyboardIsVisible)
-                    .ignoresSafeArea()
-                }
-                .blur(radius: showAppearanceBackdrop ? 10 : 0)
-                .overlay {
-                    if showAppearanceBackdrop {
-                        FloatingBackdropGlow(focus: appearanceGlowFocus)
-                            .ignoresSafeArea()
-                            .transition(.opacity)
-
-                        Color.black
-                            .opacity(0.14)
-                            .ignoresSafeArea()
-                            .transition(.opacity)
-                    }
-                }
-                .animation(appearanceBackdropAnimation, value: showAppearanceBackdrop)
-
-                if showAppearanceSheet {
-                    GeometryReader { proxy in
-                        let sheetTopInset = proxy.safeAreaInsets.top > 0 ? proxy.safeAreaInsets.top : 54
-
-                        ZStack(alignment: .top) {
-                            Color.clear
-                                .contentShape(Rectangle())
-                                .ignoresSafeArea()
-                                .onTapGesture {
-                                    dismissAppearanceSheet()
-                                }
-
-                            AppearanceSheetView(
-                                prompt: $appearancePrompt,
-                                selectedStyle: $selectedAppearanceStyle,
-                                selectedReferenceItem: $selectedReferenceItem,
-                                referenceImage: $referenceImage
-                            ) {
-                                showToast("Please fill in the content first")
-                            } onGenerate: {
-                                hasAppearanceImage = true
-                                generationStartedAt = Date()
-                                isGeneratingImage = true
-                                showImageToast = false
-                                dismissAppearanceSheet()
                             }
-                            .frame(height: max(0, proxy.size.height - sheetTopInset))
-                            .offset(
-                                y: sheetTopInset
-                                    + appearanceSheetDragOffset
-                                    + (reduceMotion || appearanceSheetIsPresented ? 0 : proxy.size.height)
-                            )
-                            .opacity(reduceMotion ? (appearanceSheetIsPresented ? 1 : 0) : 1)
-                            .gesture(
-                                DragGesture()
-                                    .onChanged { value in
-                                        appearanceSheetDragOffset = max(0, value.translation.height)
-                                    }
-                                    .onEnded { value in
-                                        let shouldDismiss = value.translation.height > 88 || value.predictedEndTranslation.height > 160
+                            .opacity(isPageScrolling ? 0.001 : 1)
+                            .offset(y: isPageScrolling ? 72 : 0)
+                            .allowsHitTesting(!isPageScrolling)
+                            .scaleEffect(isPageScrolling ? 0.985 : 1, anchor: .bottom)
+                            .animation(isPageScrolling ? buttonHideAnimation : buttonRevealAnimation, value: isPageScrolling)
+                        }
 
-                                        if shouldDismiss {
-                                            dismissAppearanceSheet()
-                                        } else {
-                                            withAnimation(appearanceSheetRestoreAnimation) {
-                                                appearanceSheetDragOffset = 0
-                                            }
-                                        }
-                                    }
-                            )
-                            .ignoresSafeArea(edges: .bottom)
+                        if showImageToast {
+                            ToastView(message: toastMessage)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                                .transition(
+                                    .asymmetric(
+                                        insertion: .opacity.combined(with: .scale(scale: 0.92)),
+                                        removal: .opacity.combined(with: .scale(scale: 0.98))
+                                    )
+                                )
+                                .zIndex(4)
+                        }
+
+                        KeyboardDismissLayer {
+                            focusedField = nil
+                            keyboardIsVisible = false
+                            UIApplication.shared.endEditing()
+                        }
+                        .allowsHitTesting(keyboardIsVisible)
+                        .ignoresSafeArea()
+                    }
+                    .ignoresSafeArea(edges: .bottom)
+                    .blur(radius: showAppearanceBackdrop ? 10 : 0)
+                    .overlay {
+                        if showAppearanceBackdrop {
+                            FloatingBackdropGlow(focus: appearanceGlowFocus)
+                                .ignoresSafeArea()
+                                .transition(.opacity)
+
+                            Color.black
+                                .opacity(0.14)
+                                .ignoresSafeArea()
+                                .transition(.opacity)
                         }
                     }
-                    .ignoresSafeArea()
-                    .zIndex(10)
+                    .animation(appearanceBackdropAnimation, value: showAppearanceBackdrop)
                 }
-
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarColorScheme(.dark, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button(action: handleBackTap) {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 18, weight: .semibold))
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbarColorScheme(.dark, for: .navigationBar)
+                .toolbar {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button(action: handleBackTap) {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 18, weight: .semibold))
+                        }
+                        .accessibilityLabel("Close")
                     }
-                    .accessibilityLabel("Close")
                 }
             }
-        }
+
+            appearanceSheetOverlay
 
             if showVoiceSelector {
                 SelectVoiceView(
@@ -431,20 +399,81 @@ struct CreateRoleView: View {
         VoiceLibrary.summary(for: selectedVoices)
     }
 
+    @ViewBuilder
+    private var appearanceSheetOverlay: some View {
+        if showAppearanceSheet {
+            GeometryReader { proxy in
+                let sheetTopInset = proxy.safeAreaInsets.top > 0 ? proxy.safeAreaInsets.top : 54
+
+                ZStack(alignment: .top) {
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .ignoresSafeArea()
+                        .onTapGesture {
+                            dismissAppearanceSheet()
+                        }
+
+                    AppearanceSheetView(
+                        prompt: $appearancePrompt,
+                        selectedStyle: $selectedAppearanceStyle,
+                        selectedReferenceItem: $selectedReferenceItem,
+                        referenceImage: $referenceImage
+                    ) {
+                        showToast("Please fill in the content first")
+                    } onGenerate: {
+                        hasAppearanceImage = true
+                        generationStartedAt = Date()
+                        isGeneratingImage = true
+                        showImageToast = false
+                        dismissAppearanceSheet()
+                    }
+                    .frame(height: max(0, proxy.size.height - sheetTopInset))
+                    .offset(
+                        y: sheetTopInset
+                            + appearanceSheetDragOffset
+                            + (reduceMotion || appearanceSheetIsPresented ? 0 : proxy.size.height)
+                    )
+                    .scaleEffect(reduceMotion || appearanceSheetIsPresented ? 1 : 0.992, anchor: .bottom)
+                    .opacity(reduceMotion ? (appearanceSheetIsPresented ? 1 : 0) : 1)
+                    .gesture(
+                        DragGesture()
+                            .onChanged { value in
+                                appearanceSheetDragOffset = max(0, value.translation.height)
+                            }
+                            .onEnded { value in
+                                let shouldDismiss = value.translation.height > 88 || value.predictedEndTranslation.height > 160
+
+                                if shouldDismiss {
+                                    dismissAppearanceSheet()
+                                } else {
+                                    withAnimation(appearanceSheetRestoreAnimation) {
+                                        appearanceSheetDragOffset = 0
+                                    }
+                                }
+                            }
+                    )
+                    .ignoresSafeArea(edges: .bottom)
+                }
+            }
+            .ignoresSafeArea()
+            .zIndex(11)
+        }
+    }
+
     private var appearanceBackdropAnimation: Animation {
-        .easeOut(duration: reduceMotion ? 0.16 : 0.24)
+        .easeOut(duration: reduceMotion ? 0.12 : 0.16)
     }
 
     private var appearanceSheetPresentationAnimation: Animation {
-        reduceMotion ? .easeOut(duration: 0.16) : .spring(duration: 0.55, bounce: 0)
+        reduceMotion ? .easeOut(duration: 0.12) : .spring(duration: 0.28, bounce: 0)
     }
 
     private var appearanceSheetDismissAnimation: Animation {
-        .easeOut(duration: reduceMotion ? 0.16 : 0.24)
+        reduceMotion ? .easeOut(duration: 0.12) : .timingCurve(0.20, 0.0, 0.0, 1.0, duration: 0.18)
     }
 
     private var appearanceSheetRestoreAnimation: Animation {
-        reduceMotion ? .easeOut(duration: 0.12) : .spring(duration: 0.45, bounce: 0)
+        reduceMotion ? .easeOut(duration: 0.10) : .spring(duration: 0.24, bounce: 0)
     }
 
     private func presentVoiceSelector() {
@@ -496,7 +525,7 @@ struct CreateRoleView: View {
             showAppearanceBackdrop = false
         }
 
-        let removalDelay = reduceMotion ? 0.16 : 0.24
+        let removalDelay = reduceMotion ? 0.12 : 0.18
         DispatchQueue.main.asyncAfter(deadline: .now() + removalDelay) {
             guard !appearanceSheetIsPresented else { return }
             showAppearanceSheet = false
@@ -1408,18 +1437,6 @@ private struct FigmaBackgroundGlow: View {
     }
 }
 
-private struct VisualEffectBlur: UIViewRepresentable {
-    let style: UIBlurEffect.Style
-
-    func makeUIView(context: Context) -> UIVisualEffectView {
-        UIVisualEffectView(effect: UIBlurEffect(style: style))
-    }
-
-    func updateUIView(_ uiView: UIVisualEffectView, context: Context) {
-        uiView.effect = UIBlurEffect(style: style)
-    }
-}
-
 private struct FloatingBackdropGlow: View {
     let focus: CGPoint
 
@@ -1526,11 +1543,16 @@ private struct AppearanceSheetView: View {
                 basePromptHeight: 421 * verticalScale
             )
             let styleTopSpacing = 24 * verticalScale
-            let buttonBottomPadding = 42 * verticalScale
+            let buttonBottomPadding: CGFloat = 42
 
             ZStack(alignment: .top) {
-                VisualEffectBlur(style: .systemUltraThinMaterialDark)
-                    .overlay(Color.black.opacity(0.60))
+                UnevenRoundedRectangle(topLeadingRadius: 38, topTrailingRadius: 38)
+                    .fill(Color.clear)
+                    .glassEffect(
+                        .regular.tint(Color(hex: 0x121212).opacity(0.72)),
+                        in: UnevenRoundedRectangle(topLeadingRadius: 38, topTrailingRadius: 38)
+                    )
+                    .overlay(Color.black.opacity(0.28))
                     .contentShape(Rectangle())
                     .onTapGesture {
                         UIApplication.shared.endEditing()
@@ -1631,12 +1653,9 @@ private struct AppearanceSheetView: View {
                             Text("Generate")
                                 .font(.telkaMedium(size: 17))
                         }
-                        .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 56)
-                        .background(Color(hex: 0x0088FF), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(PrimaryBlueButtonStyle())
                     .padding(.horizontal, 16)
                     .padding(.bottom, buttonBottomPadding)
                 }
@@ -2159,12 +2178,15 @@ private struct SelectVoiceView: View {
     let onToast: (String) -> Void
 
     @State private var selectedCategory: VoiceCategory = .all
+    @GestureState private var interactiveBackOffset: CGFloat = 0
+    @State private var playingVoiceOrigin: VoicePlaybackOrigin?
+    @State private var isActionButtonHidden = false
+    @State private var lastScrollOffsetY = 0.0
+    @State private var scrollHideDistance = 0.0
+    @State private var scrollIdleWorkItem: DispatchWorkItem?
 
-    private var filteredPresets: [VoicePreset] {
-        VoiceLibrary.presets.filter { preset in
-            selectedCategory == .all || preset.category == selectedCategory
-        }
-    }
+    private let buttonHideAnimation = Animation.timingCurve(0.24, 0.0, 0.22, 1.0, duration: 0.34)
+    private let buttonRevealAnimation = Animation.timingCurve(0.16, 1.0, 0.30, 1.0, duration: 0.42)
 
     var body: some View {
         NavigationStack {
@@ -2177,24 +2199,32 @@ private struct SelectVoiceView: View {
                             selectedVoices: $selectedVoices,
                             pitch: $pitch,
                             speed: $speed,
+                            playingVoiceID: playingVoiceOrigin == .mix ? playingVoiceID : nil,
                             isPreviewLoading: $isPreviewLoading,
                             isPreviewPlaying: $isPreviewPlaying,
-                            onPlayVoice: playVoice,
+                            onPlayVoice: { playVoice($0, origin: .mix) },
                             onRemove: removeVoice,
                             onPreview: previewVoiceMix
                         )
 
                         VoiceListSection(
                             selectedCategory: $selectedCategory,
-                            presets: filteredPresets,
+                            presets: VoiceLibrary.presets,
                             selectedVoices: selectedVoices,
-                            playingVoiceID: playingVoiceID,
-                            onPlay: playVoice,
-                            onToggle: toggleVoice
+                            playingVoiceID: playingVoiceOrigin == .list ? playingVoiceID : nil,
+                            onPlay: { playVoice($0, origin: .list) },
+                            onToggle: toggleVoice,
+                            onCategorySelect: selectVoiceCategory
                         )
                     }
                     .padding(.top, 20)
                     .padding(.bottom, 132)
+                    .animation(VoiceMixMotion.response, value: selectedVoices.count)
+                }
+                .onScrollGeometryChange(for: Double.self) { geometry in
+                    Double(geometry.contentOffset.y)
+                } action: { _, offsetY in
+                    updateActionButtonVisibility(offsetY: offsetY)
                 }
 
                 LinearGradient(
@@ -2207,15 +2237,17 @@ private struct SelectVoiceView: View {
                     Button(action: onDone) {
                         Text("Done")
                             .font(.telkaMedium(size: 17))
-                        .foregroundStyle(.white)
-                        .frame(height: 56)
-                        .frame(maxWidth: .infinity)
-                        .background(Color(hex: 0x0088FF), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                        .padding(.horizontal, 16)
-                        .padding(.bottom, 42)
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(PrimaryBlueButtonStyle())
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 42)
                 }
-                    .buttonStyle(.plain)
-                }
+                .opacity(isActionButtonHidden ? 0.001 : 1)
+                .offset(y: isActionButtonHidden ? 72 : 0)
+                .allowsHitTesting(!isActionButtonHidden)
+                .scaleEffect(isActionButtonHidden ? 0.985 : 1, anchor: .bottom)
+                .animation(isActionButtonHidden ? buttonHideAnimation : buttonRevealAnimation, value: isActionButtonHidden)
             }
             .ignoresSafeArea(edges: .bottom)
             .navigationBarTitleDisplayMode(.inline)
@@ -2237,28 +2269,108 @@ private struct SelectVoiceView: View {
                 }
             }
         }
+        .offset(x: interactiveBackOffset)
+        .simultaneousGesture(edgeBackGesture)
         .preferredColorScheme(.dark)
     }
 
+    private var edgeBackGesture: some Gesture {
+        DragGesture(minimumDistance: 12, coordinateSpace: .local)
+            .updating($interactiveBackOffset) { value, state, _ in
+                guard isValidBackSwipe(value) else { return }
+                state = min(value.translation.width, 120)
+            }
+            .onEnded { value in
+                guard isValidBackSwipe(value) else { return }
+
+                if value.translation.width > 84 || value.predictedEndTranslation.width > 160 {
+                    onBack()
+                }
+            }
+    }
+
+    private func isValidBackSwipe(_ value: DragGesture.Value) -> Bool {
+        value.startLocation.x <= 24
+            && value.translation.width > 0
+            && abs(value.translation.width) > abs(value.translation.height)
+    }
+
+    private func updateActionButtonVisibility(offsetY: Double) {
+        let delta = offsetY - lastScrollOffsetY
+        lastScrollOffsetY = offsetY
+
+        guard abs(delta) > 0.5 else { return }
+
+        scrollIdleWorkItem?.cancel()
+
+        if delta > 0, offsetY > 24 {
+            scrollHideDistance += delta
+        } else if delta < 0 {
+            scrollHideDistance = 0
+        }
+
+        if scrollHideDistance > 44, !isActionButtonHidden {
+            withAnimation(buttonHideAnimation) {
+                isActionButtonHidden = true
+            }
+        } else if delta < -8, isActionButtonHidden {
+            withAnimation(buttonRevealAnimation) {
+                isActionButtonHidden = false
+            }
+        }
+
+        let workItem = DispatchWorkItem {
+            scrollHideDistance = 0
+
+            if isActionButtonHidden {
+                withAnimation(buttonRevealAnimation) {
+                    isActionButtonHidden = false
+                }
+            }
+        }
+        scrollIdleWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.65, execute: workItem)
+    }
+
+    private func selectVoiceCategory(_ category: VoiceCategory) {
+        guard category != selectedCategory else { return }
+
+        withAnimation(VoiceMixMotion.categoryTab) {
+            selectedCategory = category
+        }
+    }
+
     private func toggleVoice(_ preset: VoicePreset) {
-        if let index = selectedVoices.firstIndex(where: { $0.preset.id == preset.id }) {
-            selectedVoices.remove(at: index)
+        withAnimation(VoiceMixMotion.response) {
+            if let index = selectedVoices.firstIndex(where: { $0.preset.id == preset.id }) {
+                selectedVoices.remove(at: index)
+                if playingVoiceID == preset.id, playingVoiceOrigin == .mix {
+                    playingVoiceID = nil
+                    playingVoiceOrigin = nil
+                }
+                resetWeightsToFull()
+                return
+            }
+
+            guard selectedVoices.count < VoiceLibrary.maxMixedVoices else {
+                onToast("You can mix up to 3 voices")
+                return
+            }
+
+            selectedVoices.append(VoiceMixSelection(preset: preset, weight: 1))
             resetWeightsToFull()
-            return
         }
-
-        guard selectedVoices.count < VoiceLibrary.maxMixedVoices else {
-            onToast("You can mix up to 3 voices")
-            return
-        }
-
-        selectedVoices.append(VoiceMixSelection(preset: preset, weight: 1))
-        resetWeightsToFull()
     }
 
     private func removeVoice(_ selection: VoiceMixSelection) {
-        selectedVoices.removeAll { $0.id == selection.id }
-        resetWeightsToFull()
+        withAnimation(VoiceMixMotion.response) {
+            selectedVoices.removeAll { $0.id == selection.id }
+            if playingVoiceID == selection.preset.id, playingVoiceOrigin == .mix {
+                playingVoiceID = nil
+                playingVoiceOrigin = nil
+            }
+            resetWeightsToFull()
+        }
     }
 
     private func normalizeWeights() {
@@ -2282,10 +2394,17 @@ private struct SelectVoiceView: View {
         }
     }
 
-    private func playVoice(_ preset: VoicePreset) {
+    private func playVoice(_ preset: VoicePreset, origin: VoicePlaybackOrigin) {
         isPreviewLoading = false
         isPreviewPlaying = false
-        playingVoiceID = playingVoiceID == preset.id ? nil : preset.id
+
+        if playingVoiceID == preset.id, playingVoiceOrigin == origin {
+            playingVoiceID = nil
+            playingVoiceOrigin = nil
+        } else {
+            playingVoiceID = preset.id
+            playingVoiceOrigin = origin
+        }
     }
 
     private func previewVoiceMix() {
@@ -2302,6 +2421,7 @@ private struct SelectVoiceView: View {
 
         isPreviewLoading = true
         playingVoiceID = nil
+        playingVoiceOrigin = nil
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
             guard isPreviewLoading else { return }
@@ -2316,7 +2436,9 @@ private enum VoiceMixMotion {
     static let quickExit = Animation.easeOut(duration: 0.10)
     static let contentFadeIn = Animation.easeInOut(duration: 0.16).delay(0.08)
     static let contentFadeOut = Animation.easeOut(duration: 0.06)
-    static let emptyHeight: CGFloat = 56
+    static let categoryTab = Animation.timingCurve(0.16, 0.0, 0.04, 1.16, duration: 0.28)
+    static let categoryList = Animation.timingCurve(0.20, 0.0, 0.0, 1.0, duration: 0.24)
+    static let emptyHeight: CGFloat = 80
 }
 
 private struct VoiceMixContentHeightPreferenceKey: PreferenceKey {
@@ -2345,6 +2467,7 @@ private struct VoiceMixSection: View {
     @Binding var selectedVoices: [VoiceMixSelection]
     @Binding var pitch: Double
     @Binding var speed: Double
+    let playingVoiceID: String?
     @Binding var isPreviewLoading: Bool
     @Binding var isPreviewPlaying: Bool
 
@@ -2373,6 +2496,7 @@ private struct VoiceMixSection: View {
                         selectedVoices: $selectedVoices,
                         pitch: $pitch,
                         speed: $speed,
+                        playingVoiceID: playingVoiceID,
                         isPreviewLoading: isPreviewLoading,
                         isPreviewPlaying: isPreviewPlaying,
                         onPlayVoice: onPlayVoice,
@@ -2392,7 +2516,17 @@ private struct VoiceMixSection: View {
             }
             .frame(height: contentHeight, alignment: .top)
             .padding(.horizontal, 16)
-            .background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .background(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .fill(Color.white.opacity(hasSelectedVoices ? 0.04 : 0))
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .stroke(
+                        Color.white.opacity(hasSelectedVoices ? 0 : 0.12),
+                        style: StrokeStyle(lineWidth: 1, dash: [2, 2])
+                    )
+            }
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             .padding(.horizontal, 16)
             .animation(VoiceMixMotion.response, value: hasSelectedVoices)
@@ -2423,6 +2557,7 @@ private struct VoiceMixSection: View {
                         selectedVoices: $selectedVoices,
                         pitch: $pitch,
                         speed: $speed,
+                        playingVoiceID: playingVoiceID,
                         isPreviewLoading: isPreviewLoading,
                         isPreviewPlaying: isPreviewPlaying,
                         onPlayVoice: onPlayVoice,
@@ -2446,7 +2581,7 @@ private struct VoiceMixEmptyState: View {
     var body: some View {
         Text("Select up to 3 voices to mix")
             .font(.system(size: 15, weight: .regular))
-            .foregroundStyle(.white.opacity(0.40))
+            .foregroundStyle(.white.opacity(0.20))
             .frame(maxWidth: .infinity)
             .frame(height: VoiceMixMotion.emptyHeight)
     }
@@ -2457,6 +2592,7 @@ private struct VoiceMixControls: View {
     @Binding var pitch: Double
     @Binding var speed: Double
 
+    let playingVoiceID: String?
     let isPreviewLoading: Bool
     let isPreviewPlaying: Bool
     let onPlayVoice: (VoicePreset) -> Void
@@ -2468,7 +2604,7 @@ private struct VoiceMixControls: View {
             selectionRows
 
             VStack(spacing: 16) {
-                VoiceAdjustmentSlider(title: "Pitch", lowLabel: "Low", highLabel: "High", value: $pitch)
+                VoiceAdjustmentSlider(title: "Pitch", lowLabel: "Low", highLabel: "high", value: $pitch)
 
                 VoiceAdjustmentSlider(title: "Speed", lowLabel: "Slow", highLabel: "Fast", value: $speed)
             }
@@ -2497,14 +2633,13 @@ private struct VoiceMixControls: View {
                 VoiceWeightRow(
                     selection: $selection,
                     showsWeightControls: selectedVoices.count > 1,
+                    isPlaying: playingVoiceID == selection.preset.id,
                     onPlay: onPlayVoice,
                     onRemove: onRemove
                 )
-                .transition(.opacity)
             }
         }
         .padding(.top, 20)
-        .animation(VoiceMixMotion.response, value: selectedVoices.count)
     }
 }
 
@@ -2527,6 +2662,7 @@ private struct SectionTabTitle: View {
 
 private struct SingleVoiceMixHeader: View {
     let selection: VoiceMixSelection
+    let isPlaying: Bool
     let onPlay: (VoicePreset) -> Void
     let onRemove: (VoiceMixSelection) -> Void
 
@@ -2535,10 +2671,7 @@ private struct SingleVoiceMixHeader: View {
             Button {
                 onPlay(selection.preset)
             } label: {
-                Image(systemName: "play.fill")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.white)
-                    .frame(width: 24, height: 24)
+                VoicePlaybackIcon(isPlaying: isPlaying, size: 24, playSize: 11)
             }
             .buttonStyle(.plain)
 
@@ -2566,12 +2699,13 @@ private struct SingleVoiceMixHeader: View {
 private struct VoiceWeightRow: View {
     @Binding var selection: VoiceMixSelection
     let showsWeightControls: Bool
+    let isPlaying: Bool
     let onPlay: (VoicePreset) -> Void
     let onRemove: (VoiceMixSelection) -> Void
 
     var body: some View {
         VStack(spacing: showsWeightControls ? 4 : 0) {
-            SingleVoiceMixHeader(selection: selection, onPlay: onPlay, onRemove: onRemove)
+            SingleVoiceMixHeader(selection: selection, isPlaying: isPlaying, onPlay: onPlay, onRemove: onRemove)
                 .frame(height: 24)
                 .transaction { transaction in
                     transaction.animation = nil
@@ -2583,12 +2717,146 @@ private struct VoiceWeightRow: View {
                         .frame(height: 46)
                 }
                 .padding(.leading, 8)
-                .transition(.opacity.animation(VoiceMixMotion.contentFadeIn))
             }
         }
         .frame(height: showsWeightControls ? 74 : 24, alignment: .top)
         .clipped()
-        .animation(VoiceMixMotion.response, value: showsWeightControls)
+        .transaction { transaction in
+            transaction.animation = nil
+        }
+    }
+}
+
+private struct VoicePlaybackIcon: View {
+    let isPlaying: Bool
+    let size: CGFloat
+    let playSize: CGFloat
+
+    var body: some View {
+        ZStack {
+            if isPlaying {
+                AudioPlayingBars(size: size)
+            } else {
+                Image(systemName: "play.fill")
+                    .font(.system(size: playSize, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.92))
+            }
+        }
+        .frame(width: size, height: size)
+    }
+}
+
+private struct AudioPlayingBars: View {
+    private struct Keyframe {
+        let percent: Double
+        let height: CGFloat
+    }
+
+    private struct Bar {
+        let x: CGFloat
+        let delayMs: Double
+        let keyframes: [Keyframe]
+    }
+
+    let size: CGFloat
+
+    private let durationMs = 1250.0
+    private let sourceSize: CGFloat = 96
+    private let visualScale: CGFloat = 1.42
+    private let barWidth: CGFloat = 4
+    private let barRadius: CGFloat = 2
+
+    private let opacityKeyframes = [
+        Keyframe(percent: 0, height: 0.86),
+        Keyframe(percent: 18, height: 1),
+        Keyframe(percent: 52, height: 0.9),
+        Keyframe(percent: 74, height: 0.98),
+        Keyframe(percent: 100, height: 0.86)
+    ]
+
+    private let bars = [
+        Bar(x: 32, delayMs: 0, keyframes: [
+            Keyframe(percent: 0, height: 10), Keyframe(percent: 18, height: 14),
+            Keyframe(percent: 40, height: 8), Keyframe(percent: 62, height: 18),
+            Keyframe(percent: 84, height: 11), Keyframe(percent: 96, height: 10),
+            Keyframe(percent: 100, height: 10)
+        ]),
+        Bar(x: 40, delayMs: -160, keyframes: [
+            Keyframe(percent: 0, height: 20), Keyframe(percent: 16, height: 31),
+            Keyframe(percent: 38, height: 16), Keyframe(percent: 60, height: 27),
+            Keyframe(percent: 82, height: 18), Keyframe(percent: 96, height: 20),
+            Keyframe(percent: 100, height: 20)
+        ]),
+        Bar(x: 48, delayMs: -50, keyframes: [
+            Keyframe(percent: 0, height: 37), Keyframe(percent: 17, height: 25),
+            Keyframe(percent: 39, height: 35), Keyframe(percent: 61, height: 18),
+            Keyframe(percent: 81, height: 37), Keyframe(percent: 96, height: 37),
+            Keyframe(percent: 100, height: 37)
+        ]),
+        Bar(x: 56, delayMs: -260, keyframes: [
+            Keyframe(percent: 0, height: 14), Keyframe(percent: 18, height: 29),
+            Keyframe(percent: 40, height: 17), Keyframe(percent: 62, height: 34),
+            Keyframe(percent: 82, height: 13), Keyframe(percent: 96, height: 14),
+            Keyframe(percent: 100, height: 14)
+        ]),
+        Bar(x: 64, delayMs: -100, keyframes: [
+            Keyframe(percent: 0, height: 11), Keyframe(percent: 18, height: 21),
+            Keyframe(percent: 42, height: 9), Keyframe(percent: 64, height: 17),
+            Keyframe(percent: 84, height: 19), Keyframe(percent: 96, height: 11),
+            Keyframe(percent: 100, height: 11)
+        ])
+    ]
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { timeline in
+            let elapsedMs = timeline.date.timeIntervalSinceReferenceDate * 1000
+            let scale = size / sourceSize * visualScale
+            let sourceCenter = sourceSize / 2
+            let opacityProgress = normalizedProgress(elapsedMs: elapsedMs, delayMs: 0)
+
+            ZStack {
+                ForEach(Array(bars.enumerated()), id: \.offset) { _, bar in
+                    let progress = normalizedProgress(elapsedMs: elapsedMs, delayMs: bar.delayMs)
+                    let height = interpolatedValue(in: bar.keyframes, progress: progress) * scale
+
+                    RoundedRectangle(cornerRadius: barRadius * scale, style: .continuous)
+                        .fill(.white)
+                        .frame(width: barWidth * scale, height: height)
+                        .position(
+                            x: size / 2 + (bar.x - sourceCenter) * scale,
+                            y: size / 2
+                        )
+                }
+            }
+            .opacity(interpolatedValue(in: opacityKeyframes, progress: opacityProgress))
+        }
+        .frame(width: size, height: size)
+    }
+
+    private func normalizedProgress(elapsedMs: Double, delayMs: Double) -> Double {
+        let shifted = (elapsedMs + delayMs).truncatingRemainder(dividingBy: durationMs)
+        let normalized = shifted < 0 ? shifted + durationMs : shifted
+        return normalized / durationMs
+    }
+
+    private func interpolatedValue(in keyframes: [Keyframe], progress: Double) -> CGFloat {
+        let percent = progress * 100
+
+        guard let first = keyframes.first else { return 0 }
+        guard percent > first.percent else { return first.height }
+
+        for index in 1..<keyframes.count {
+            let previous = keyframes[index - 1]
+            let next = keyframes[index]
+
+            if percent <= next.percent {
+                let span = max(next.percent - previous.percent, 0.0001)
+                let localProgress = (percent - previous.percent) / span
+                return previous.height + (next.height - previous.height) * CGFloat(localProgress)
+            }
+        }
+
+        return keyframes.last?.height ?? first.height
     }
 }
 
@@ -2608,7 +2876,8 @@ private struct VoiceAdjustmentSlider: View {
                 .padding(.leading, 4)
 
             VoiceTickSlider(value: $value)
-                .frame(height: 46)
+                .frame(height: VoiceSliderStyle.touchHeight)
+                .padding(.top, 6)
 
             HStack {
                 Text(lowLabel)
@@ -2619,6 +2888,7 @@ private struct VoiceAdjustmentSlider: View {
             .foregroundStyle(.white.opacity(0.40))
             .frame(height: 17)
             .padding(.horizontal, 4)
+            .padding(.top, VoiceSliderStyle.labelTopSpacing)
         }
     }
 }
@@ -2678,8 +2948,10 @@ private struct VoiceWeightSlider: View {
 private enum VoiceSliderStyle {
     static let highlightColor = Color(hex: 0x0088FF)
     static let weightTrackHeight: CGFloat = 5
+    static let touchHeight: CGFloat = 46
     static let designedTrackHeight: CGFloat = 24
     static let designedTrackCornerRadius: CGFloat = 12
+    static let labelTopSpacing: CGFloat = -7
 }
 
 private struct VoiceDesignedSliderTrack: View {
@@ -2786,41 +3058,197 @@ private struct VoiceListSection: View {
     let playingVoiceID: String?
     let onPlay: (VoicePreset) -> Void
     let onToggle: (VoicePreset) -> Void
+    let onCategorySelect: (VoiceCategory) -> Void
+
+    @State private var listHeights: [VoiceCategory: CGFloat] = [:]
+
+    private var selectedListHeight: CGFloat? {
+        listHeights[selectedCategory]
+    }
 
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 20) {
                 ForEach(VoiceCategory.allCases) { category in
                     Button {
-                        selectedCategory = category
+                        selectCategory(category)
                     } label: {
                         Text(category.rawValue)
                             .font(.telkaMedium(size: 17))
-                            .foregroundStyle(selectedCategory == category ? .white : .white.opacity(0.36))
-                            .frame(height: 52)
+                            .foregroundStyle(.white.opacity(0.36))
+                            .anchorPreference(
+                                key: VoiceCategoryFramePreferenceKey.self,
+                                value: .bounds
+                            ) { [category: $0] }
+                        .frame(height: 52)
                     }
                     .buttonStyle(.plain)
                 }
 
                 Spacer()
             }
+            .overlayPreferenceValue(VoiceCategoryFramePreferenceKey.self) { anchors in
+                GeometryReader { proxy in
+                    if let selectedAnchor = anchors[selectedCategory] {
+                        let selectedFrame = proxy[selectedAnchor]
+
+                        VoiceCategoryHighlightLayer()
+                            .mask(alignment: .topLeading) {
+                                Rectangle()
+                                    .frame(width: selectedFrame.width + 4, height: selectedFrame.height)
+                                    .offset(x: selectedFrame.minX - 2, y: selectedFrame.minY)
+                            }
+                            .animation(VoiceMixMotion.categoryTab, value: selectedCategory)
+                    }
+                }
+                .allowsHitTesting(false)
+            }
             .padding(.leading, 32)
 
-            VStack(spacing: 10) {
-                ForEach(presets) { preset in
-                    SelectVoiceListRow(
-                        preset: preset,
-                        isSelected: selectedVoices.contains { $0.preset.id == preset.id },
-                        isPlaying: playingVoiceID == preset.id,
-                        onPlay: { onPlay(preset) },
-                        onToggle: { onToggle(preset) }
+            ZStack(alignment: .top) {
+                ForEach(VoiceCategory.allCases) { category in
+                    VoicePresetListRows(
+                        presets: presets(for: category),
+                        selectedVoices: selectedVoices,
+                        playingVoiceID: playingVoiceID,
+                        onPlay: onPlay,
+                        onToggle: onToggle
                     )
+                    .background(VoiceCategoryListHeightReader(category: category))
+                    .opacity(selectedCategory == category ? 1 : 0)
+                    .allowsHitTesting(selectedCategory == category)
                     .transaction { transaction in
                         transaction.animation = nil
                     }
                 }
             }
+            .frame(height: selectedListHeight, alignment: .top)
             .padding(.horizontal, 16)
+            .clipped()
+            .onPreferenceChange(VoiceCategoryListHeightPreferenceKey.self) { heights in
+                listHeights.merge(heights) { _, next in next }
+            }
+        }
+        .contentShape(Rectangle())
+        .simultaneousGesture(categorySwipeGesture)
+    }
+
+    private func presets(for category: VoiceCategory) -> [VoicePreset] {
+        presets.filter { preset in
+            category == .all || preset.category == category
+        }
+    }
+
+    private func selectCategory(_ category: VoiceCategory) {
+        guard category != selectedCategory else { return }
+
+        onCategorySelect(category)
+    }
+
+    private var categorySwipeGesture: some Gesture {
+        DragGesture(minimumDistance: 24)
+            .onEnded { value in
+                guard isValidCategorySwipe(value) else { return }
+
+                moveCategory(by: value.translation.width < 0 ? 1 : -1)
+            }
+    }
+
+    private func isValidCategorySwipe(_ value: DragGesture.Value) -> Bool {
+        let horizontalDistance = value.translation.width
+        let verticalDistance = value.translation.height
+        let predictedHorizontalDistance = value.predictedEndTranslation.width
+
+        return (
+            abs(horizontalDistance) > 64
+                && abs(horizontalDistance) > abs(verticalDistance) * 1.25
+        ) || (
+            abs(predictedHorizontalDistance) > 150
+                && abs(predictedHorizontalDistance) > abs(value.predictedEndTranslation.height) * 1.25
+        )
+    }
+
+    private func moveCategory(by step: Int) {
+        let categories = VoiceCategory.allCases
+        guard let currentIndex = categories.firstIndex(of: selectedCategory) else { return }
+
+        let nextIndex = (currentIndex + step + categories.count) % categories.count
+        onCategorySelect(categories[nextIndex])
+    }
+}
+
+private struct VoicePresetListRows: View {
+    let presets: [VoicePreset]
+    let selectedVoices: [VoiceMixSelection]
+    let playingVoiceID: String?
+    let onPlay: (VoicePreset) -> Void
+    let onToggle: (VoicePreset) -> Void
+
+    var body: some View {
+        VStack(spacing: 10) {
+            ForEach(presets) { preset in
+                let isSelected = selectedVoices.contains { $0.preset.id == preset.id }
+                let isPlaying = playingVoiceID == preset.id
+
+                SelectVoiceListRow(
+                    preset: preset,
+                    isSelected: isSelected,
+                    isPlaying: isPlaying,
+                    onPlay: { onPlay(preset) },
+                    onToggle: { onToggle(preset) }
+                )
+                .transaction { transaction in
+                    if transaction.animation != nil {
+                        transaction.disablesAnimations = true
+                    }
+                }
+                .animation(nil, value: isSelected)
+                .animation(nil, value: isPlaying)
+            }
+        }
+    }
+}
+
+private struct VoiceCategoryListHeightPreferenceKey: PreferenceKey {
+    static var defaultValue: [VoiceCategory: CGFloat] = [:]
+
+    static func reduce(value: inout [VoiceCategory: CGFloat], nextValue: () -> [VoiceCategory: CGFloat]) {
+        value.merge(nextValue(), uniquingKeysWith: { _, next in next })
+    }
+}
+
+private struct VoiceCategoryListHeightReader: View {
+    let category: VoiceCategory
+
+    var body: some View {
+        GeometryReader { proxy in
+            Color.clear.preference(
+                key: VoiceCategoryListHeightPreferenceKey.self,
+                value: [category: proxy.size.height]
+            )
+        }
+    }
+}
+
+private struct VoiceCategoryFramePreferenceKey: PreferenceKey {
+    static var defaultValue: [VoiceCategory: Anchor<CGRect>] = [:]
+
+    static func reduce(value: inout [VoiceCategory: Anchor<CGRect>], nextValue: () -> [VoiceCategory: Anchor<CGRect>]) {
+        value.merge(nextValue(), uniquingKeysWith: { _, next in next })
+    }
+}
+
+private struct VoiceCategoryHighlightLayer: View {
+    var body: some View {
+        HStack(spacing: 20) {
+            ForEach(VoiceCategory.allCases) { category in
+                Text(category.rawValue)
+                    .font(.telkaMedium(size: 17))
+                    .foregroundStyle(.white)
+                    .frame(height: 52)
+            }
+
+            Spacer()
         }
     }
 }
@@ -2835,10 +3263,7 @@ private struct SelectVoiceListRow: View {
     var body: some View {
         HStack(spacing: 8) {
             Button(action: onPlay) {
-                Image(systemName: isPlaying ? "waveform" : "play.fill")
-                    .font(.system(size: isPlaying ? 15 : 16, weight: .medium))
-                    .foregroundStyle(isPlaying ? .white : .white.opacity(0.92))
-                    .frame(width: 32, height: 32)
+                VoicePlaybackIcon(isPlaying: isPlaying, size: 32, playSize: 16)
             }
             .buttonStyle(.plain)
 
@@ -2889,7 +3314,7 @@ private struct SelectVoiceListRow: View {
         .padding(.leading, 12)
         .padding(.trailing, 16)
         .frame(height: 80)
-        .background(Color.white.opacity(isSelected ? 0.08 : 0.04), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
 }
 
@@ -2904,12 +3329,26 @@ private struct PrimaryCreateButton: View {
                 Text("Create")
                     .font(.telkaMedium(size: 17))
             }
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(PrimaryBlueButtonStyle())
+    }
+}
+
+private struct PrimaryBlueButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
             .foregroundStyle(.white)
             .frame(height: 56)
             .frame(maxWidth: .infinity)
-            .background(Color(hex: 0x0088FF), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        }
-        .buttonStyle(.plain)
+            .background {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(Color(hex: 0x0088FF))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(Color.black.opacity(configuration.isPressed ? 0.25 : 0))
+                    }
+            }
     }
 }
 
