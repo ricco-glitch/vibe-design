@@ -1,4 +1,23 @@
+# System files
 .DS_Store
+
+# Dependencies and build outputs
+node_modules/
+dist/
+build/
+.next/
+.vite/
+
+# Logs and local env
+*.log
+.env
+.env.*
+!.env.example
+
+# Temporary workspace files
+work/
+
+# Xcode derived files
 .derivedData/
 .module-cache/
 .xcode-derived/
