@@ -23,3 +23,6 @@ work/
 .xcode-derived/
 .xcode-derived-check/
 .xcode-home/
+
+# Xcode user-specific settings
+*.xcuserdatad/
